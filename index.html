@@ -47,6 +47,7 @@
 </div>
 
 <script>
+    // --- URLをここに貼り付け ---
     const MENU_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqAzC1pf6MrFTr2pakufvQw_vbYvB4_RML6AnS7QmAbqoce6_Ioy56NYwdnVUA4xfXNXrMmx3YDWJk/pub?gid=0&single=true&output=csv';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbxd3VoAB-b-AaFiXBJpdHjHW-U7H-NbMbf73t9fMIS26nxrQFUcNZhF8miN5S8cksauSw/exec';
 
@@ -74,7 +75,7 @@
                     basePrice: bp, 
                     price: Math.floor(bp * 1.1), 
                     options: d[3]?.trim().toLowerCase() === 'true',
-                    isAvailable: d[4]?.trim() !== '0' // E列が0なら完売
+                    isAvailable: d[4]?.trim() !== '0'
                 };
             });
             if (menu.length > 0 && !currentCategory) currentCategory = menu[0].category;
@@ -88,11 +89,25 @@
         
         const container = document.getElementById('menu-container');
         container.innerHTML = `<div class="grid grid-cols-2 gap-3">${menu.filter(i => i.category === currentCategory).map(item => {
-            const priceDisp = item.category === "ドリンク" ? `¥${item.price.toLocaleString()}` : `¥${item.price.toLocaleString()}<span class="text-[9px] text-slate-400 ml-1 font-normal">(税抜¥${item.basePrice})</span>`;
+            
+            // 価格表示ロジックの修正
+            let priceDisp = "";
+            if (item.category.includes("ドリンク")) {
+                // ドリンク：税込をメインに表示
+                priceDisp = `¥${item.price.toLocaleString()}<span class="text-[10px] ml-0.5 font-normal">(税込)</span>`;
+            } else {
+                // ドリンク以外：税抜をメイン、税込をカッコ内に表示
+                priceDisp = `¥${item.basePrice.toLocaleString()}<span class="text-[9px] text-slate-400 ml-1 font-normal">(税込¥${item.price.toLocaleString()})</span>`;
+            }
+
             const soldOutClass = item.isAvailable ? "" : "sold-out";
             const clickAttr = item.isAvailable ? `onclick="handleItemClick('${item.name}')"` : "";
 
-            return `<button ${clickAttr} class="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm active:scale-95 flex flex-col justify-center min-h-[88px] ${soldOutClass}"><b class="text-sm font-bold text-slate-800 leading-tight">${item.name}</b><span class="text-orange-600 font-black text-sm mt-1">${priceDisp}</span></button>`;
+            return `
+                <button ${clickAttr} class="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm active:scale-95 flex flex-col justify-center min-h-[88px] ${soldOutClass}">
+                    <b class="text-sm font-bold text-slate-800 leading-tight">${item.name}</b>
+                    <span class="text-orange-600 font-black text-sm mt-1">${priceDisp}</span>
+                </button>`;
         }).join('')}</div>`;
         updateTotal();
     }
@@ -101,11 +116,19 @@
     
     function handleItemClick(name) {
         const item = menu.find(i => i.name === name);
-        if (item.options) { pendingItem = item; document.getElementById('modal-item-name').innerText = item.name; document.getElementById('option-modal').classList.add('active'); } 
-        else { addToOrder(item.name, item.price, item.basePrice); }
+        if (item.options) { 
+            pendingItem = item; 
+            document.getElementById('modal-item-name').innerText = item.name; 
+            document.getElementById('option-modal').classList.add('active'); 
+        } else { 
+            addToOrder(item.name, item.price, item.basePrice); 
+        }
     }
     
-    function confirmOption(opt) { addToOrder(`${pendingItem.name}(${opt})`, pendingItem.price, pendingItem.basePrice); closeModal('option-modal'); }
+    function confirmOption(opt) { 
+        addToOrder(`${pendingItem.name}(${opt})`, pendingItem.price, pendingItem.basePrice); 
+        closeModal('option-modal'); 
+    }
 
     async function addToOrder(name, p, bp) {
         const orderItem = { id: Date.now(), name, price: p, basePrice: bp, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), served: false };
@@ -129,7 +152,19 @@
 
     function openHistory() {
         const list = document.getElementById('history-list');
-        list.innerHTML = orders.length ? orders.map((o, idx) => `<div onclick="toggleServed(${idx})" class="flex justify-between items-center p-4 rounded-xl border transition-all ${o.served ? 'bg-slate-50 opacity-50 border-slate-100' : 'bg-white border-blue-200 shadow-sm'}"><div class="flex items-center space-x-3 text-left"><div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${o.served ? 'bg-blue-600 border-blue-600' : 'border-slate-300'}">${o.served ? '<span class="text-white text-[10px]">✓</span>' : ''}</div><div><div class="text-[9px] text-slate-400 font-mono">${o.time}</div><div class="text-sm font-bold ${o.served ? 'line-through text-slate-400' : ''}">${o.name}</div></div></div><button onclick="event.stopPropagation(); deleteOrder(${idx})" class="text-red-400 text-xs p-2 font-bold uppercase tracking-tighter">Del</button></div>`).join('') : '<p class="text-center text-slate-400 py-10 font-bold text-sm tracking-widest">NO ORDERS</p>';
+        list.innerHTML = orders.length ? orders.map((o, idx) => `
+            <div onclick="toggleServed(${idx})" class="flex justify-between items-center p-4 rounded-xl border transition-all ${o.served ? 'bg-slate-50 opacity-50 border-slate-100' : 'bg-white border-blue-200 shadow-sm'}">
+                <div class="flex items-center space-x-3 text-left">
+                    <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${o.served ? 'bg-blue-600 border-blue-600' : 'border-slate-300'}">
+                        ${o.served ? '<span class="text-white text-[10px]">✓</span>' : ''}
+                    </div>
+                    <div>
+                        <div class="text-[9px] text-slate-400 font-mono">${o.time}</div>
+                        <div class="text-sm font-bold ${o.served ? 'line-through text-slate-400' : ''}">${o.name}</div>
+                    </div>
+                </div>
+                <button onclick="event.stopPropagation(); deleteOrder(${idx})" class="text-red-400 text-xs p-2 font-bold uppercase tracking-tighter">Del</button>
+            </div>`).join('') : '<p class="text-center text-slate-400 py-10 font-bold text-sm tracking-widest">NO ORDERS</p>';
         document.getElementById('history-modal').classList.add('active');
     }
 
