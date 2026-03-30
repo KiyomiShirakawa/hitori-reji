@@ -92,13 +92,23 @@
             const soldOutClass = item.isAvailable ? "" : "sold-out";
             const clickAttr = item.isAvailable ? `onclick="handleItemClick('${item.name}')"` : "";
 
-            // 表示ロジック：D列とE列が異なる場合のみ (税込¥XXX) を付与
+            // --- 表示ロジックの確定 ---
             let priceText = item.displayPrice.toLocaleString();
-            if (!item.category.includes("ドリンク") && item.displayPrice !== item.calcPrice) {
+            
+            if (item.category.includes("ドリンク")) {
+                // ドリンクの場合： 500(税込)
+                priceText += `<span class="text-[10px] ml-0.5 font-normal">(税込)</span>`;
+            } else {
+                // ドリンク以外の場合： 150(税込¥165)
+                // ※G列(表示)とH列(計算)が同じ数値でも、ルール通り常に表示します
                 priceText += `<span class="text-[9px] text-slate-400 ml-1 font-normal">(税込¥${item.calcPrice.toLocaleString()})</span>`;
             }
+            // -----------------------
 
-            return `<button ${clickAttr} class="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm active:scale-95 flex flex-col justify-center min-h-[88px] ${soldOutClass}"><b class="text-sm font-bold text-slate-800 leading-tight">${item.name}</b><span class="text-orange-600 font-black text-sm mt-1">¥${priceText}</span></button>`;
+            return `<button ${clickAttr} class="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm active:scale-95 flex flex-col justify-center min-h-[88px] ${soldOutClass}">
+                <b class="text-sm font-bold text-slate-800 leading-tight">${item.name}</b>
+                <span class="text-orange-600 font-black text-sm mt-1">¥${priceText}</span>
+            </button>`;
         }).join('')}</div>`;
         updateTotal();
     }
