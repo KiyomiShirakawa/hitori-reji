@@ -18,13 +18,18 @@
 <div id="app" class="max-w-md mx-auto h-screen flex flex-col relative overflow-hidden">
     
     <header class="bg-slate-900 text-white p-3 flex justify-between items-center z-50">
-        <button onclick="openTableSelect()" class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 flex items-center">
-            <span id="display-table" class="text-blue-400 font-black text-lg mr-2">?</span>
-            <span class="text-[10px] text-slate-400">席切替 ▾</span>
+        <button onclick="openTableSelect()" class="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700 flex items-center flex-shrink-0">
+            <span id="display-table" class="text-blue-400 font-black text-base mr-1">?</span>
+            <span class="text-[9px] text-slate-400">席▾</span>
         </button>
-        <div class="flex space-x-2">
-            <button onclick="fetchMenu()" class="text-[10px] bg-slate-700 px-3 py-2 rounded font-bold">更新</button>
-            <button onclick="exportCSV()" class="text-[10px] bg-emerald-700 px-3 py-2 rounded font-bold">日報</button>
+
+        <div class="flex-1 text-center px-2">
+            <span class="font-bold text-sm tracking-tighter whitespace-nowrap">やきとり食堂ひとり</span>
+        </div>
+
+        <div class="flex space-x-1 flex-shrink-0">
+            <button onclick="fetchMenu()" class="text-[10px] bg-slate-700 px-2.5 py-2 rounded font-bold">更新</button>
+            <button onclick="exportCSV()" class="text-[10px] bg-emerald-700 px-2.5 py-2 rounded font-bold">日報</button>
         </div>
     </header>
 
