@@ -1,65 +1,103 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-    <title>居酒屋レジ Pro</title>
+    <title>やきとり食堂ひとり レジアプリ試用版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-family: sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
         .modal.active { display: flex; }
         .sold-out { filter: grayscale(1); opacity: 0.6; position: relative; }
-        .sold-out::after { content: "SOLD OUT"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #ef4444; font-weight: 900; font-size: 1.2rem; transform: rotate(-15deg); }
+        .sold-out::after { content: "欠品"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #ef4444; font-weight: 900; font-size: 1.2rem; transform: rotate(-15deg); }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body class="bg-slate-50 text-slate-900">
 <div id="app" class="max-w-md mx-auto h-screen flex flex-col relative overflow-hidden">
     
-    <header class="bg-slate-900 text-white p-4 flex justify-between items-center z-50">
-        <h1 class="font-bold text-lg"><span id="display-table" class="text-blue-400">?</span>番卓</h1>
+    <header class="bg-slate-900 text-white p-3 flex justify-between items-center z-50">
+        <button onclick="openTableSelect()" class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 flex items-center">
+            <span id="display-table" class="text-blue-400 font-black text-lg mr-2">?</span>
+            <span class="text-[10px] text-slate-400">席切替 ▾</span>
+        </button>
         <div class="flex space-x-2">
-            <button onclick="fetchMenu()" class="text-[10px] border border-slate-600 px-3 py-1.5 rounded text-slate-300 active:bg-slate-800">更新</button>
-            <button onclick="exportCSV()" class="text-[10px] bg-emerald-700 px-3 py-1.5 rounded text-white font-bold active:bg-emerald-800">日報</button>
+            <button onclick="fetchMenu()" class="text-[10px] bg-slate-700 px-3 py-2 rounded font-bold">更新</button>
+            <button onclick="exportCSV()" class="text-[10px] bg-emerald-700 px-3 py-2 rounded font-bold">日報</button>
         </div>
     </header>
 
     <div id="tab-container" class="flex overflow-x-auto no-scrollbar bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm"></div>
 
-    <div id="menu-container" class="flex-1 overflow-y-auto p-4 pb-48 no-scrollbar"></div>
+    <div id="menu-container" class="flex-1 overflow-y-auto p-4 pb-52 no-scrollbar"></div>
 
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 max-w-md mx-auto z-40 shadow-2xl">
         <div class="flex justify-between items-end mb-4 px-1">
             <div class="text-left">
-                <span class="text-[10px] text-slate-400 block font-bold tracking-widest uppercase">Total (Tax In)</span>
-                <span class="text-3xl font-mono font-black">¥<span id="total-price">0</span></span>
+                <span class="text-[10px] text-slate-400 block font-bold tracking-widest uppercase">Current Total</span>
+                <span class="text-3xl font-mono font-black text-slate-800">¥<span id="total-price">0</span></span>
             </div>
-            <button onclick="openHistory()" class="relative text-blue-600 font-bold text-sm border-b-2 border-blue-600 pb-0.5">
-                配膳確認 <span id="unserved-count" class="hidden absolute -top-2 -right-4 bg-red-500 text-white text-[10px] rounded-full px-1.5 font-mono">0</span>
+            <button onclick="openHistory()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold text-sm border border-blue-100 flex items-center">
+                履歴・数量
+                <span id="order-count-badge" class="ml-2 bg-blue-600 text-white text-[10px] rounded-full px-1.5 min-w-[18px] text-center">0</span>
             </button>
         </div>
-        <button onclick="clearOrders()" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg active:bg-black shadow-lg">会計完了・リセット</button>
+        <button onclick="clearOrders()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg active:bg-black shadow-lg">会計完了 (席リセット)</button>
     </div>
 
-    <div id="option-modal" class="modal"><div class="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl text-center"><h3 id="modal-item-name" class="font-bold mb-6 text-sm tracking-widest text-slate-500 uppercase">味付けを選択</h3><div class="grid gap-3"><button onclick="confirmOption('塩')" class="bg-slate-50 py-4 rounded-xl font-bold border active:bg-blue-600 active:text-white">塩</button><button onclick="confirmOption('タレ')" class="bg-slate-50 py-4 rounded-xl font-bold border active:bg-blue-600 active:text-white">タレ</button><button onclick="confirmOption('おまかせ')" class="bg-slate-50 py-4 rounded-xl font-bold border active:bg-blue-600 active:text-white">おまかせ</button></div><button onclick="closeModal('option-modal')" class="mt-6 text-slate-400 text-xs py-2">キャンセル</button></div></div>
-    <div id="history-modal" class="modal"><div class="bg-white rounded-2xl w-full max-w-sm h-[80vh] flex flex-col shadow-2xl"><div class="p-5 border-b flex justify-between items-center text-sm font-bold"><span>配膳チェックリスト</span><button onclick="closeModal('history-modal')" class="text-slate-400 text-xl font-light">✕</button></div><div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar"></div><div class="p-5 bg-slate-50 border-t"><button onclick="closeModal('history-modal')" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">閉じる</button></div></div></div>
+    <div id="table-modal" class="modal">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+            <h3 class="font-black text-center mb-6 text-slate-500 text-sm tracking-widest">席を選択してください</h3>
+            <div class="grid grid-cols-4 gap-3 mb-6">
+                <script>
+                    for(let i=1; i<=10; i++) {
+                        document.write(`<button onclick="switchTable('C${i}')" class="bg-slate-50 py-3 rounded-xl font-bold border border-slate-100 active:bg-blue-600 active:text-white">C${i}</button>`);
+                    }
+                </script>
+                <button onclick="switchTable('T1')" class="col-span-2 bg-orange-50 py-3 rounded-xl font-bold border border-orange-100 active:bg-orange-600 active:text-white text-orange-700">Table 1</button>
+                <button onclick="switchTable('T2')" class="col-span-2 bg-orange-50 py-3 rounded-xl font-bold border border-orange-100 active:bg-orange-600 active:text-white text-orange-700">Table 2</button>
+            </div>
+            <button onclick="closeModal('table-modal')" class="w-full py-3 text-slate-400 text-sm">閉じる</button>
+        </div>
+    </div>
+
+    <div id="history-modal" class="modal">
+        <div class="bg-white rounded-t-3xl w-full max-w-md h-[85vh] mt-auto flex flex-col shadow-2xl relative">
+            <div class="p-6 border-b flex justify-between items-center">
+                <span class="font-black text-lg">注文履歴 <small class="text-slate-400 font-normal ml-2" id="history-table-name"></small></span>
+                <button onclick="closeModal('history-modal')" class="text-slate-300 text-2xl">✕</button>
+            </div>
+            <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div>
+            <div class="p-6 bg-slate-50 border-t rounded-b-3xl">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-bold text-slate-500">合計金額</span>
+                    <span class="text-2xl font-black text-blue-600">¥<span id="history-total">0</span></span>
+                </div>
+                <button onclick="closeModal('history-modal')" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold">メニューに戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="option-modal" class="modal">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-xs shadow-2xl text-center">
+            <h3 id="modal-item-name" class="font-black mb-8 text-slate-400 text-xs tracking-widest uppercase">選択してください</h3>
+            <div id="option-buttons" class="grid gap-4"></div>
+            <button onclick="closeModal('option-modal')" class="mt-8 text-slate-400 text-xs">キャンセル</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    // --- 自身のURLに書き換えてください ---
     const MENU_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqAzC1pf6MrFTr2pakufvQw_vbYvB4_RML6AnS7QmAbqoce6_Ioy56NYwdnVUA4xfXNXrMmx3YDWJk/pub?gid=0&single=true&output=csv';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbxd3VoAB-b-AaFiXBJpdHjHW-U7H-NbMbf73t9fMIS26nxrQFUcNZhF8miN5S8cksauSw/exec';
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const tableNo = urlParams.get('table') || '1';
-    document.getElementById('display-table').innerText = tableNo;
-
+    let tableNo = localStorage.getItem('last_table') || 'C1';
     let menu = [], currentCategory = "", pendingItem = null;
-    const storageKey = `orders_pro_table_${tableNo}`;
-    const historyKey = `izakaya_all_history`;
-    let orders = JSON.parse(localStorage.getItem(storageKey)) || [];
-    let salesHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
+    let orders = [];
+    let salesHistory = JSON.parse(localStorage.getItem('izakaya_all_history')) || [];
+
+    document.getElementById('display-table').innerText = tableNo;
+    loadTableOrders();
 
     async function fetchMenu() {
         try {
@@ -71,11 +109,11 @@
                 return { 
                     category: d[0]?.trim(), 
                     name: d[1]?.trim(), 
-                    basePrice: parseInt(d[2]) || 0,     // C列: 日報用(税抜)
-                    displayPrice: parseInt(d[3]) || 0,  // D列: 画面表示用数値
-                    calcPrice: parseInt(d[4]) || 0,     // E列: 会計計算用数値
-                    options: d[5]?.trim().toLowerCase() === 'true', // F列: 味付け
-                    isAvailable: d[6]?.trim() !== '0'   // G列: 在庫
+                    basePrice: parseInt(d[2]) || 0, 
+                    displayPrice: parseInt(d[3]) || 0,
+                    calcPrice: parseInt(d[4]) || 0,
+                    options: d[5]?.trim().toLowerCase() === 'true',
+                    isAvailable: d[6]?.trim() !== '0'
                 };
             });
             if (menu.length > 0 && !currentCategory) currentCategory = menu[0].category;
@@ -85,68 +123,143 @@
 
     function render() {
         const cats = [...new Set(menu.map(i => i.category))];
-        document.getElementById('tab-container').innerHTML = cats.map(c => `<button onclick="switchCategory('${c}')" class="flex-shrink-0 px-6 py-4 font-black text-[11px] uppercase tracking-widest transition-all border-b-4 ${currentCategory === c ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}">${c}</button>`).join('');
+        document.getElementById('tab-container').innerHTML = cats.map(c => `
+            <button onclick="switchCategory('${c}')" class="flex-shrink-0 px-6 py-4 font-black text-[11px] uppercase tracking-widest transition-all border-b-4 ${currentCategory === c ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}">${c}</button>
+        `).join('');
         
         const container = document.getElementById('menu-container');
         container.innerHTML = `<div class="grid grid-cols-2 gap-3">${menu.filter(i => i.category === currentCategory).map(item => {
             const soldOutClass = item.isAvailable ? "" : "sold-out";
             const clickAttr = item.isAvailable ? `onclick="handleItemClick('${item.name}')"` : "";
-
-            // --- 表示ロジックの確定 ---
-            let priceText = item.displayPrice.toLocaleString();
             
+            let priceDisplay = item.displayPrice.toLocaleString();
             if (item.category.includes("ドリンク")) {
-                // ドリンクの場合： 500(税込)
-                priceText += `<span class="text-[10px] ml-0.5 font-normal">(税込)</span>`;
+                priceDisplay += `<span class="text-[10px] ml-0.5 font-normal">(税込)</span>`;
             } else {
-                // ドリンク以外の場合： 150(税込¥165)
-                // ※G列(表示)とH列(計算)が同じ数値でも、ルール通り常に表示します
-                priceText += `<span class="text-[9px] text-slate-400 ml-1 font-normal">(税込¥${item.calcPrice.toLocaleString()})</span>`;
+                priceDisplay += `<span class="text-[9px] text-slate-400 ml-1 font-normal">(税込¥${item.calcPrice.toLocaleString()})</span>`;
             }
-            // -----------------------
 
-            return `<button ${clickAttr} class="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm active:scale-95 flex flex-col justify-center min-h-[88px] ${soldOutClass}">
-                <b class="text-sm font-bold text-slate-800 leading-tight">${item.name}</b>
-                <span class="text-orange-600 font-black text-sm mt-1">¥${priceText}</span>
-            </button>`;
+            return `
+                <button ${clickAttr} class="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm active:scale-95 flex flex-col justify-center min-h-[90px] ${soldOutClass}">
+                    <b class="text-sm font-bold text-slate-800 leading-tight">${item.name}</b>
+                    <span class="text-orange-600 font-black text-sm mt-1">¥${priceDisplay}</span>
+                </button>`;
         }).join('')}</div>`;
         updateTotal();
     }
 
     function switchCategory(cat) { currentCategory = cat; render(); }
+    function openTableSelect() { document.getElementById('table-modal').classList.add('active'); }
+    
+    function switchTable(no) {
+        tableNo = no;
+        localStorage.setItem('last_table', no);
+        document.getElementById('display-table').innerText = no;
+        loadTableOrders();
+        closeModal('table-modal');
+        render();
+    }
+
+    function loadTableOrders() {
+        orders = JSON.parse(localStorage.getItem(`orders_table_${tableNo}`)) || [];
+        updateTotal();
+    }
+
     function handleItemClick(name) {
         const item = menu.find(i => i.name === name);
-        if (item.options) { pendingItem = item; document.getElementById('modal-item-name').innerText = item.name; document.getElementById('option-modal').classList.add('active'); } 
-        else { addToOrder(item.name, item.calcPrice, item.basePrice); }
+        if (item.options) { 
+            pendingItem = item; 
+            document.getElementById('modal-item-name').innerText = item.name;
+            const btnContainer = document.getElementById('option-buttons');
+            let opts = [];
+
+            if (item.name === "日本酒") opts = ["冷酒", "常温", "熱燗"];
+            else if (item.name === "梅酒") opts = ["ロック", "ソーダ割"];
+            else if (item.name === "焼酎") opts = ["ロック", "水割", "お湯割"];
+            else opts = ["塩", "タレ", "おまかせ"];
+
+            btnContainer.innerHTML = opts.map(o => `
+                <button onclick="confirmOption('${o}')" class="bg-slate-50 py-5 rounded-2xl font-black text-lg border border-slate-100 active:bg-blue-600 active:text-white">${o}</button>
+            `).join('');
+            document.getElementById('option-modal').classList.add('active'); 
+        } else { 
+            addToOrder(item.name, item.calcPrice, item.basePrice); 
+        }
     }
-    function confirmOption(opt) { addToOrder(`${pendingItem.name}(${opt})`, pendingItem.calcPrice, pendingItem.basePrice); closeModal('option-modal'); }
+
+    function confirmOption(opt) { 
+        addToOrder(`${pendingItem.name}(${opt})`, pendingItem.calcPrice, pendingItem.basePrice); 
+        closeModal('option-modal'); 
+    }
+
     async function addToOrder(name, p, bp) {
-        const orderItem = { id: Date.now(), name, price: p, basePrice: bp, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), served: false };
-        orders.push(orderItem);
-        salesHistory.push({ ...orderItem, date: new Date().toLocaleString('ja-JP'), table: tableNo });
-        localStorage.setItem(historyKey, JSON.stringify(salesHistory));
+        const existing = orders.find(o => o.name === name && o.price === p);
+        if (existing) { existing.qty++; } 
+        else { orders.push({ name, price: p, basePrice: bp, qty: 1 }); }
         save();
-        fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ ...orderItem, date: new Date().toLocaleString('ja-JP'), table: tableNo }) });
+        fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ date: new Date().toLocaleString('ja-JP'), table: tableNo, name, price: p, basePrice: bp }) });
     }
-    function save() { localStorage.setItem(storageKey, JSON.stringify(orders)); updateTotal(); }
+
+    function changeQty(idx, delta) {
+        orders[idx].qty += delta;
+        if (orders[idx].qty <= 0) {
+            if(confirm("この注文を取り消しますか？")) orders.splice(idx, 1);
+            else orders[idx].qty = 1;
+        }
+        save();
+        openHistory();
+    }
+
+    function save() {
+        localStorage.setItem(`orders_table_${tableNo}`, JSON.stringify(orders));
+        updateTotal();
+    }
+
     function updateTotal() {
-        const total = orders.reduce((sum, o) => sum + o.price, 0);
+        const total = orders.reduce((sum, o) => sum + (o.price * o.qty), 0);
+        const count = orders.reduce((sum, o) => sum + o.qty, 0);
         document.getElementById('total-price').innerText = total.toLocaleString();
-        const unserved = orders.filter(o => !o.served).length;
-        const badge = document.getElementById('unserved-count');
-        badge.innerText = unserved;
-        badge.classList.toggle('hidden', unserved === 0);
+        document.getElementById('order-count-badge').innerText = count;
+        if(document.getElementById('history-total')) document.getElementById('history-total').innerText = total.toLocaleString();
     }
+
     function openHistory() {
+        document.getElementById('history-table-name').innerText = `${tableNo}番席`;
         const list = document.getElementById('history-list');
-        list.innerHTML = orders.length ? orders.map((o, idx) => `<div onclick="toggleServed(${idx})" class="flex justify-between items-center p-4 rounded-xl border transition-all ${o.served ? 'bg-slate-50 opacity-50 border-slate-100' : 'bg-white border-blue-200 shadow-sm'}"><div class="flex items-center space-x-3 text-left"><div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${o.served ? 'bg-blue-600 border-blue-600' : 'border-slate-300'}">${o.served ? '<span class="text-white text-[10px]">✓</span>' : ''}</div><div><div class="text-[9px] text-slate-400 font-mono">${o.time}</div><div class="text-sm font-bold ${o.served ? 'line-through text-slate-400' : ''}">${o.name}</div></div></div><button onclick="event.stopPropagation(); deleteOrder(${idx})" class="text-red-400 text-xs p-2 font-bold uppercase tracking-tighter">Del</button></div>`).join('') : '<p class="text-center text-slate-400 py-10 font-bold text-sm tracking-widest">NO ORDERS</p>';
+        list.innerHTML = orders.length ? orders.map((o, idx) => `
+            <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex justify-between items-center">
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-slate-800">${o.name}</div>
+                    <div class="text-[11px] text-orange-600 font-black">¥${o.price.toLocaleString()}</div>
+                </div>
+                <div class="flex items-center space-x-4 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
+                    <button onclick="changeQty(${idx}, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-blue-600 font-black">-</button>
+                    <span class="font-mono font-black text-lg w-6 text-center">${o.qty}</span>
+                    <button onclick="changeQty(${idx}, 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-blue-600 font-black">+</button>
+                </div>
+            </div>
+        `).join('') : '<div class="text-center py-20 text-slate-300 font-bold">注文履歴はありません</div>';
         document.getElementById('history-modal').classList.add('active');
+        updateTotal();
     }
-    function toggleServed(idx) { orders[idx].served = !orders[idx].served; save(); openHistory(); }
-    function deleteOrder(idx) { if(confirm("この注文を削除しますか？")) { orders.splice(idx, 1); save(); openHistory(); } }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); pendingItem = null; }
-    function clearOrders() { if (orders.length > 0 && confirm(`${tableNo}番卓の会計を完了しリセットしますか？`)) { orders = []; save(); } }
-    function exportCSV() { let csv = "\uFEFF日時,卓番,商品名,税抜,税込\n"; salesHistory.forEach(s => csv += `${s.date},${s.table},${s.name},${s.basePrice},${s.price}\n`); window.location.href = `mailto:?subject=売上日報&body=${encodeURIComponent(csv)}`; }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function clearOrders() {
+        if (orders.length > 0 && confirm(`${tableNo}番席の会計を完了してリセットしますか？`)) {
+            orders.forEach(o => { salesHistory.push({ ...o, date: new Date().toLocaleString('ja-JP'), table: tableNo }); });
+            localStorage.setItem('izakaya_all_history', JSON.stringify(salesHistory));
+            orders = [];
+            save();
+        }
+    }
+
+    function exportCSV() {
+        let csv = "\uFEFF日時,席,商品名,税抜,税込,数量\n";
+        salesHistory.forEach(s => csv += `${s.date},${s.table},${s.name},${s.basePrice},${s.price},${s.qty}\n`);
+        window.location.href = `mailto:?subject=居酒屋レジ売上日報&body=${encodeURIComponent(csv)}`;
+    }
+
     fetchMenu();
 </script>
 </body>
