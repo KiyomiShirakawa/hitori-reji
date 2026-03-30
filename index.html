@@ -61,7 +61,7 @@
     let orders = JSON.parse(localStorage.getItem(storageKey)) || [];
     let salesHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-    async function fetchMenu() {
+	async function fetchMenu() {
         try {
             const res = await fetch(MENU_CSV_URL + '&t=' + Date.now());
             const text = await res.text();
@@ -73,6 +73,7 @@
                     category: d[0].trim(), 
                     name: d[1].trim(), 
                     basePrice: bp, 
+                    // ここで税込価格を「切り捨て」で計算
                     price: Math.floor(bp * 1.1), 
                     options: d[3]?.trim().toLowerCase() === 'true',
                     isAvailable: d[4]?.trim() !== '0'
@@ -90,13 +91,13 @@
         const container = document.getElementById('menu-container');
         container.innerHTML = `<div class="grid grid-cols-2 gap-3">${menu.filter(i => i.category === currentCategory).map(item => {
             
-            // 価格表示ロジックの修正
             let priceDisp = "";
+            // カテゴリー名に「ドリンク」が含まれる場合
             if (item.category.includes("ドリンク")) {
-                // ドリンク：税込をメインに表示
+                // 税込価格（切り捨て済み）を表示
                 priceDisp = `¥${item.price.toLocaleString()}<span class="text-[10px] ml-0.5 font-normal">(税込)</span>`;
             } else {
-                // ドリンク以外：税抜をメイン、税込をカッコ内に表示
+                // 税抜価格をメイン、税込価格（切り捨て済み）をカッコ内に表示
                 priceDisp = `¥${item.basePrice.toLocaleString()}<span class="text-[9px] text-slate-400 ml-1 font-normal">(税込¥${item.price.toLocaleString()})</span>`;
             }
 
@@ -111,7 +112,7 @@
         }).join('')}</div>`;
         updateTotal();
     }
-
+    
     function switchCategory(cat) { currentCategory = cat; render(); }
     
     function handleItemClick(name) {
