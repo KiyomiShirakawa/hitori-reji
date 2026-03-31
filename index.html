@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-    <title>やきとり食堂ひとり レジアプリ試用版</title>
+    <title>やきとり食堂ひとり レジ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-family: sans-serif; display: none; }
@@ -22,13 +22,13 @@
 <body class="bg-slate-50 text-slate-900">
 <div id="app" class="max-w-md mx-auto h-screen flex flex-col relative overflow-hidden">
     
-    <header class="bg-slate-900 text-white p-3 flex justify-between items-center z-50 shadow-md">
+    <header class="bg-slate-900 text-white p-3 flex justify-between items-center z-50">
         <button onclick="openTableSelect()" class="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700 flex items-center">
             <span id="display-table" class="text-blue-400 font-black text-base mr-1">?</span>
             <span class="text-[9px] text-slate-400">席▾</span>
         </button>
         <div class="flex-1 text-center px-2">
-            <span class="font-bold text-sm tracking-tighter">やきとり食堂ひとり レジアプリ試用版</span>
+            <span class="font-bold text-sm tracking-tighter">やきとり食堂ひとり</span>
         </div>
         <div class="flex space-x-1">
             <button onclick="fetchMenu()" class="text-[10px] bg-slate-700 px-2.5 py-2 rounded font-bold">更新</button>
@@ -69,9 +69,9 @@
     
     <div id="order-modal" class="modal"><div class="bg-white rounded-3xl p-8 w-full max-w-xs text-center shadow-2xl"><h3 id="order-modal-title" class="font-black text-lg mb-2"></h3><p id="order-modal-price" class="text-orange-600 font-bold mb-6"></p><div id="option-area" class="mb-8 hidden"><p class="text-[10px] text-slate-400 mb-3 font-bold uppercase">Option</p><div id="option-buttons" class="grid grid-cols-2 gap-2"></div></div><p class="text-[10px] text-slate-400 mb-3 font-bold uppercase">Qty</p><div class="flex items-center justify-center space-x-6 mb-8"><button onclick="updatePendingQty(-1)" class="w-12 h-12 bg-slate-100 rounded-full text-2xl font-bold text-slate-400">－</button><span id="pending-qty" class="text-4xl font-mono font-black w-12">1</span><button onclick="updatePendingQty(1)" class="w-12 h-12 bg-slate-900 rounded-full text-2xl font-bold text-white">＋</button></div><button onclick="addToCart()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg">かごに入れる</button><button onclick="closeModal('order-modal')" class="mt-6 text-slate-400 text-xs">キャンセル</button></div></div>
 
-    <div id="cart-modal" class="modal"><div class="bg-white rounded-t-3xl w-full max-w-md h-[70vh] mt-auto flex flex-col shadow-2xl"><div class="p-6 border-b flex justify-between items-center"><span class="font-black text-lg text-blue-600">かごの中身を編集</span><button onclick="closeModal('cart-modal')" class="text-slate-300 text-2xl">✕</button></div><div id="cart-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div><div class="p-6 bg-slate-50 border-t"><button onclick="confirmCartOrder()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg mb-2">注文を確定する</button><button onclick="closeModal('cart-modal')" class="w-full text-slate-400 font-bold text-sm py-2 text-center">メニューに戻る</button></div></div></div>
+    <div id="cart-modal" class="modal"><div class="bg-white rounded-t-3xl w-full max-w-md h-[70vh] mt-auto flex flex-col shadow-2xl"><div class="p-6 border-b flex justify-between items-center"><span class="font-black text-lg text-blue-600">かごの中身を編集</span><button onclick="closeModal('cart-modal')" class="text-slate-300 text-2xl">✕</button></div><div id="cart-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div><div class="p-6 bg-slate-50 border-t"><button onclick="confirmCartOrder()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg mb-2">注文を確定する</button><button onclick="closeModal('cart-modal')" class="w-full text-slate-400 font-bold text-sm py-2 text-center">戻る</button></div></div></div>
 
-    <div id="history-modal" class="modal"><div class="bg-white rounded-t-3xl w-full max-w-md h-[85vh] mt-auto flex flex-col shadow-2xl"><div class="p-6 border-b flex justify-between items-center"><span class="font-black text-lg">注文履歴 <small id="history-table-name" class="text-slate-400 ml-2"></small></span><button onclick="closeModal('history-modal')" class="text-slate-300 text-2xl">✕</button></div><div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div><div class="p-6 bg-slate-50 border-t"><div class="flex justify-between items-center mb-4"><span class="font-bold text-slate-500">合計</span><span class="text-2xl font-black text-blue-600">¥<span id="history-total">0</span></span></div><button onclick="closeModal('history-modal')" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold">閉じる</button></div></div></div>
+    <div id="history-modal" class="modal"><div class="bg-white rounded-t-3xl w-full max-w-md h-[85vh] mt-auto flex flex-col shadow-2xl"><div class="p-6 border-b flex justify-between items-center"><span class="font-black text-lg">注文履歴・配膳 <small id="history-table-name" class="text-slate-400 ml-2"></small></span><button onclick="closeModal('history-modal')" class="text-slate-300 text-2xl">✕</button></div><div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div><div class="p-6 bg-slate-50 border-t"><div class="flex justify-between items-center mb-4"><span class="font-bold text-slate-500">合計</span><span class="text-2xl font-black text-blue-600">¥<span id="history-total">0</span></span></div><button onclick="closeModal('history-modal')" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold">閉じる</button></div></div></div>
 </div>
 
 <script>
@@ -84,7 +84,7 @@
         if (sessionStorage.getItem(authKey)) { document.body.style.display = 'block'; return; }
         const input = prompt("パスワードを入力してください");
         if (input === LOGIN_PASS) { sessionStorage.setItem(authKey, 'true'); document.body.style.display = 'block'; }
-        else { alert("パスワードが違います"); window.location.reload(); }
+        else { alert("不正なパスワード"); window.location.reload(); }
     })();
 
     let tableNo = localStorage.getItem('last_table') || 'C1';
@@ -152,6 +152,7 @@
         document.getElementById('pending-qty').innerText = pendingOrder.qty;
     }
 
+    // --- かご操作 ---
     function addToCart() {
         const item = pendingOrder.item;
         const finalName = pendingOrder.option ? `${item.name}(${pendingOrder.option})` : item.name;
@@ -219,6 +220,7 @@
         btn.innerText = "注文を確定";
     }
 
+    // --- 履歴・配膳 ---
     function toggleServed(idx) { orders[idx].served = !orders[idx].served; save(); openHistory(); }
     function changeHistoryQty(idx, delta) {
         orders[idx].qty += delta;
@@ -245,9 +247,44 @@
                     <span class="font-mono font-black text-lg w-6 text-center">${o.qty}</span>
                     <button onclick="changeHistoryQty(${idx}, 1)" class="w-8 h-8 bg-white rounded-lg shadow-sm font-black">+</button>
                 </div>
-            </div>`).join('') : '<div class="text-center py-20 text-slate-300 text-sm">確定済みの注文はありません</div>';
+            </div>`).join('') : '<div class="text-center py-20 text-slate-300 text-sm">注文履歴はありません</div>';
         document.getElementById('history-modal').classList.add('active');
         updateTotal();
+    }
+
+    // --- 日報書き出し（朝6時区切り） ---
+    function exportCSV() {
+        const now = new Date();
+        const businessDay = new Date(now);
+        if (now.getHours() < 6) businessDay.setDate(businessDay.getDate() - 1);
+        const targetDateStr = businessDay.toLocaleDateString('ja-JP');
+
+        if (!confirm(`${targetDateStr} 分の売上日報を作成しますか？`)) return;
+
+        const startTime = new Date(businessDay);
+        startTime.setHours(6, 0, 0, 0);
+        const endTime = new Date(startTime);
+        endTime.setDate(endTime.getDate() + 1);
+        endTime.setSeconds(endTime.getSeconds() - 1);
+
+        const filteredHistory = salesHistory.filter(s => {
+            const orderDate = new Date(s.date);
+            return orderDate >= startTime && orderDate <= endTime;
+        });
+
+        if (filteredHistory.length === 0) { alert(`${targetDateStr} の売上データがありません。`); return; }
+
+        let csv = "\uFEFF日時,席,商品名,単価(税込),数量\n";
+        let totalSales = 0;
+        filteredHistory.forEach(s => {
+            csv += `${s.date},${s.table},${s.name},${s.price},${s.qty}\n`;
+            totalSales += (s.price * s.qty);
+        });
+        csv += `\n合計金額,,${totalSales}円\n`;
+
+        const subject = `【日報】${targetDateStr}分_やきとり食堂ひとり`;
+        const body = `お疲れ様です。${targetDateStr}分の売上日報です。\n売上合計: ¥${totalSales.toLocaleString()}\n\n${csv}`;
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
 
     function switchCategory(cat) { currentCategory = cat; render(); }
@@ -255,7 +292,6 @@
     function switchTable(no) { tableNo = no; localStorage.setItem('last_table', no); document.getElementById('display-table').innerText = no; loadTableOrders(); closeModal('table-modal'); render(); }
     function loadTableOrders() { orders = JSON.parse(localStorage.getItem(`orders_table_${tableNo}`)) || []; cart = []; updateCartUI(); updateTotal(); }
     function clearOrders() { if (orders.length > 0 && confirm(`${tableNo}番席をリセットしますか？`)) { orders.forEach(o => salesHistory.push({ ...o, date: new Date().toLocaleString('ja-JP'), table: tableNo })); localStorage.setItem('izakaya_all_history', JSON.stringify(salesHistory)); orders = []; save(); } }
-    function exportCSV() { let csv = "\uFEFF日時,席,商品名,単価(税込),数量\n"; salesHistory.forEach(s => csv += `${s.date},${s.table},${s.name},${s.price},${s.qty}\n`); window.location.href = `mailto:?subject=売上日報&body=${encodeURIComponent(csv)}`; }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     fetchMenu();
 </script>
