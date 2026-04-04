@@ -123,21 +123,47 @@
         updateTotal();
     }
 
-    function handleItemClick(name) {
+function handleItemClick(name) {
         const item = menu.find(i => i.name === name);
         pendingOrder = { item: item, qty: 1, option: "" };
+        
         document.getElementById('order-modal-title').innerText = item.name;
         document.getElementById('order-modal-price').innerText = `¥${item.displayPrice.toLocaleString()}`;
         document.getElementById('pending-qty').innerText = "1";
+        
         const optArea = document.getElementById('option-area');
         const optBtnWrap = document.getElementById('option-buttons');
+
+        // 商品名に応じて出すボタンを切り替えるロジック
         if (item.options) {
             optArea.classList.remove('hidden');
-            let opts = (item.name === "焼酎") ? ["ロック", "水割", "お湯割"] :
-                       (item.name === "梅酒") ? ["ロック", "ソーダ割"] : ["塩", "タレ", "おまかせ"];
-            optBtnWrap.innerHTML = opts.map(o => `<button onclick="selectOption('${o}')" class="opt-btn bg-white py-3 rounded-xl border border-slate-100 font-bold text-sm">${o}</button>`).join('');
+            let opts = [];
+
+            if (item.name.includes("焼酎")) {
+                // 焼酎の場合
+                opts = ["ロック", "水割", "お湯割"];
+            } else if (item.name.includes("梅酒")) {
+                // 梅酒の場合
+                opts = ["ロック", "ソーダ割"];
+            } else if (item.name.includes("日本酒")) {
+                // 日本酒の場合
+                opts = ["冷酒", "常温", "熱燗"];
+            } else {
+                // 焼き鳥などの場合（デフォルト）
+                opts = ["塩", "タレ", "おまかせ"];
+            }
+
+            optBtnWrap.innerHTML = opts.map(o => `
+                <button onclick="selectOption('${o}')" class="opt-btn bg-white py-3 rounded-xl border border-slate-100 font-bold text-sm shadow-sm active:bg-blue-50">
+                    ${o}
+                </button>`).join('');
+            
+            // 最初の選択肢をデフォルトで選んでおく
             selectOption(opts[0]);
-        } else { optArea.classList.add('hidden'); }
+        } else {
+            optArea.classList.add('hidden');
+        }
+        
         document.getElementById('order-modal').classList.add('active');
     }
 
