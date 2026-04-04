@@ -69,15 +69,15 @@
     
     <div id="order-modal" class="modal"><div class="bg-white rounded-3xl p-8 w-full max-w-xs text-center shadow-2xl"><h3 id="order-modal-title" class="font-black text-lg mb-2"></h3><p id="order-modal-price" class="text-orange-600 font-bold mb-6"></p><div id="option-area" class="mb-8 hidden"><p class="text-[10px] text-slate-400 mb-3 font-bold uppercase">Option</p><div id="option-buttons" class="grid grid-cols-2 gap-2"></div></div><p class="text-[10px] text-slate-400 mb-3 font-bold uppercase">Qty</p><div class="flex items-center justify-center space-x-6 mb-8"><button onclick="updatePendingQty(-1)" class="w-12 h-12 bg-slate-100 rounded-full text-2xl font-bold text-slate-400">－</button><span id="pending-qty" class="text-4xl font-mono font-black w-12">1</span><button onclick="updatePendingQty(1)" class="w-12 h-12 bg-slate-900 rounded-full text-2xl font-bold text-white">＋</button></div><button onclick="addToCart()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg">かごに入れる</button><button onclick="closeModal('order-modal')" class="mt-6 text-slate-400 text-xs">キャンセル</button></div></div>
 
-    <div id="cart-modal" class="modal"><div class="bg-white rounded-t-3xl w-full max-w-md h-[70vh] mt-auto flex flex-col shadow-2xl"><div class="p-6 border-b flex justify-between items-center"><span class="font-black text-lg text-blue-600">かごの中身を編集</span><button onclick="closeModal('cart-modal')" class="text-slate-300 text-2xl">✕</button></div><div id="cart-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div><div class="p-6 bg-slate-50 border-t"><button onclick="confirmCartOrder()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg mb-2">注文を確定する</button><button onclick="closeModal('cart-modal')" class="w-full text-slate-400 font-bold text-sm py-2 text-center">戻る</button></div></div></div>
+    <div id="cart-modal" class="modal"><div class="bg-white rounded-t-3xl w-full max-w-md h-[70vh] mt-auto flex flex-col shadow-2xl"><div class="p-6 border-b flex justify-between items-center"><span class="font-black text-lg text-blue-600">かごを編集</span><button onclick="closeModal('cart-modal')" class="text-slate-300 text-2xl">✕</button></div><div id="cart-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div><div class="p-6 bg-slate-50 border-t"><button onclick="confirmCartOrder()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg mb-2">注文を確定する</button><button onclick="closeModal('cart-modal')" class="w-full text-slate-400 font-bold text-sm py-2 text-center">戻る</button></div></div></div>
 
     <div id="history-modal" class="modal"><div class="bg-white rounded-t-3xl w-full max-w-md h-[85vh] mt-auto flex flex-col shadow-2xl"><div class="p-6 border-b flex justify-between items-center"><span class="font-black text-lg">注文履歴・配膳 <small id="history-table-name" class="text-slate-400 ml-2"></small></span><button onclick="closeModal('history-modal')" class="text-slate-300 text-2xl">✕</button></div><div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div><div class="p-6 bg-slate-50 border-t"><div class="flex justify-between items-center mb-4"><span class="font-bold text-slate-500">合計</span><span class="text-2xl font-black text-blue-600">¥<span id="history-total">0</span></span></div><button onclick="closeModal('history-modal')" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold">閉じる</button></div></div></div>
 </div>
 
 <script>
-    const LOGIN_PASS = "2250";
-    const MENU_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqAzC1pf6MrFTr2pakufvQw_vbYvB4_RML6AnS7QmAbqoce6_Ioy56NYwdnVUA4xfXNXrMmx3YDWJk/pub?gid=0&single=true&output=csv';
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxd3VoAB-b-AaFiXBJpdHjHW-U7H-NbMbf73t9fMIS26nxrQFUcNZhF8miN5S8cksauSw/exec';
+    const LOGIN_PASS = "1234";
+    const MENU_CSV_URL = 'ここにCSVのURL';
+    const GAS_URL = 'ここにGAS_URL';
 
     (function checkAuth() {
         const authKey = 'is_authorized_v1';
@@ -91,8 +91,6 @@
     let menu = [], currentCategory = "", orders = [], salesHistory = JSON.parse(localStorage.getItem('izakaya_all_history')) || [];
     let pendingOrder = { item: null, qty: 1, option: "" };
     let cart = []; 
-
-    const DRINK_CATEGORIES = ["ビール", "チューハイ", "ハイボール", "ジャパニーズジン", "日本酒", "梅酒", "焼酎", "焼酎割", "カクテル", "ワイン", "ソフトドリンク"];
 
     document.getElementById('display-table').innerText = tableNo;
     loadTableOrders();
@@ -116,17 +114,14 @@
         document.getElementById('tab-container').innerHTML = cats.map(c => `<button onclick="switchCategory('${c}')" class="flex-shrink-0 px-6 py-4 font-black text-[11px] uppercase border-b-4 ${currentCategory === c ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}">${c}</button>`).join('');
         const container = document.getElementById('menu-container');
         container.innerHTML = `<div class="grid grid-cols-2 gap-3">${menu.filter(i => i.category === currentCategory).map(item => {
-            const isDrink = DRINK_CATEGORIES.includes(item.category);
-            let priceDisp = item.displayPrice.toLocaleString() + (isDrink ? `<span class="text-[10px] ml-0.5 font-normal">(税込)</span>` : `<span class="text-[9px] text-slate-400 ml-1 font-normal">(税込¥${item.calcPrice.toLocaleString()})</span>`);
-            return `<button onclick="${item.isAvailable ? `handleItemClick('${item.name}')` : ''}" class="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm active:scale-95 min-h-[90px] ${item.isAvailable ? '' : 'sold-out'}"><b class="text-sm font-bold text-slate-800 leading-tight">${item.name}</b><span class="text-orange-600 font-black text-sm block mt-1">¥${priceDisp}</span></button>`;
+            return `<button onclick="${item.isAvailable ? `handleItemClick('${item.name}')` : ''}" class="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm active:scale-95 min-h-[90px] ${item.isAvailable ? '' : 'sold-out'}"><b class="text-sm font-bold text-slate-800 leading-tight">${item.name}</b><span class="text-orange-600 font-black text-sm block mt-1">¥${item.displayPrice.toLocaleString()}</span></button>`;
         }).join('')}</div>`;
         updateTotal();
     }
 
-function handleItemClick(name) {
+    function handleItemClick(name) {
         const item = menu.find(i => i.name === name);
         pendingOrder = { item: item, qty: 1, option: "" };
-        
         document.getElementById('order-modal-title').innerText = item.name;
         document.getElementById('order-modal-price').innerText = `¥${item.displayPrice.toLocaleString()}`;
         document.getElementById('pending-qty').innerText = "1";
@@ -134,36 +129,22 @@ function handleItemClick(name) {
         const optArea = document.getElementById('option-area');
         const optBtnWrap = document.getElementById('option-buttons');
 
-        // 商品名に応じて出すボタンを切り替えるロジック
         if (item.options) {
             optArea.classList.remove('hidden');
             let opts = [];
-
-            if (item.name.includes("焼酎")) {
-                // 焼酎の場合
+            // カテゴリーや名前で出し分け
+            if (item.category === "焼酎" || item.name.includes("焼酎")) {
                 opts = ["ロック", "水割", "お湯割"];
-            } else if (item.name.includes("梅酒")) {
-                // 梅酒の場合
+            } else if (item.category === "梅酒" || item.name.includes("梅酒")) {
                 opts = ["ロック", "ソーダ割"];
-            } else if (item.name.includes("日本酒")) {
-                // 日本酒の場合
+            } else if (item.category === "日本酒" || item.name.includes("日本酒")) {
                 opts = ["冷酒", "常温", "熱燗"];
             } else {
-                // 焼き鳥などの場合（デフォルト）
                 opts = ["塩", "タレ", "おまかせ"];
             }
-
-            optBtnWrap.innerHTML = opts.map(o => `
-                <button onclick="selectOption('${o}')" class="opt-btn bg-white py-3 rounded-xl border border-slate-100 font-bold text-sm shadow-sm active:bg-blue-50">
-                    ${o}
-                </button>`).join('');
-            
-            // 最初の選択肢をデフォルトで選んでおく
+            optBtnWrap.innerHTML = opts.map(o => `<button onclick="selectOption('${o}')" class="opt-btn bg-white py-3 rounded-xl border border-slate-100 font-bold text-sm">${o}</button>`).join('');
             selectOption(opts[0]);
-        } else {
-            optArea.classList.add('hidden');
-        }
-        
+        } else { optArea.classList.add('hidden'); }
         document.getElementById('order-modal').classList.add('active');
     }
 
@@ -177,30 +158,25 @@ function handleItemClick(name) {
         document.getElementById('pending-qty').innerText = pendingOrder.qty;
     }
 
-    // --- かご操作 ---
     function addToCart() {
         const item = pendingOrder.item;
         const finalName = pendingOrder.option ? `${item.name}(${pendingOrder.option})` : item.name;
         const existing = cart.find(c => c.finalName === finalName);
         if (existing) { existing.qty += pendingOrder.qty; } 
         else { cart.push({ ...item, finalName: finalName, qty: pendingOrder.qty }); }
-        updateCartUI();
-        closeModal('order-modal');
+        updateCartUI(); closeModal('order-modal');
     }
 
     function updateCartUI() {
         const preview = document.getElementById('cart-preview');
-        const btn = document.getElementById('submit-cart-btn');
         if (cart.length > 0) {
             preview.classList.remove('hidden');
-            preview.classList.add('cart-update');
-            setTimeout(() => preview.classList.remove('cart-update'), 200);
             document.getElementById('cart-count').innerText = cart.reduce((s, c) => s + c.qty, 0);
             document.getElementById('cart-items-text').innerText = cart.map(c => `${c.finalName}x${c.qty}`).join(', ');
-            btn.disabled = false;
+            document.getElementById('submit-cart-btn').disabled = false;
         } else {
             preview.classList.add('hidden');
-            btn.disabled = true;
+            document.getElementById('submit-cart-btn').disabled = true;
             closeModal('cart-modal');
         }
     }
@@ -209,29 +185,21 @@ function handleItemClick(name) {
         const list = document.getElementById('cart-list');
         list.innerHTML = cart.map((c, idx) => `
             <div class="bg-white border border-blue-100 p-4 rounded-2xl flex justify-between items-center shadow-sm">
-                <div><div class="font-bold text-sm">${c.finalName}</div><div class="text-blue-600 text-xs font-black">¥${(c.calcPrice * c.qty).toLocaleString()}</div></div>
+                <div><div class="font-bold text-sm">${c.finalName}</div><div class="text-blue-600 text-xs">¥${(c.calcPrice * c.qty).toLocaleString()}</div></div>
                 <div class="flex items-center space-x-3">
-                    <button onclick="updateCartQty(${idx}, -1)" class="w-8 h-8 bg-slate-100 rounded-lg font-black text-slate-400">-</button>
+                    <button onclick="updateCartQty(${idx}, -1)" class="w-8 h-8 bg-slate-100 rounded-lg font-black">-</button>
                     <span class="font-mono font-black w-4 text-center">${c.qty}</span>
-                    <button onclick="updateCartQty(${idx}, 1)" class="w-8 h-8 bg-slate-100 rounded-lg font-black text-slate-400">+</button>
-                    <button onclick="removeFromCart(${idx})" class="ml-2 text-red-400 p-2 text-lg">✕</button>
+                    <button onclick="updateCartQty(${idx}, 1)" class="w-8 h-8 bg-slate-100 rounded-lg font-black">+</button>
+                    <button onclick="removeFromCart(${idx})" class="ml-2 text-red-400 p-2">✕</button>
                 </div>
             </div>`).join('');
         document.getElementById('cart-modal').classList.add('active');
     }
 
-    function updateCartQty(idx, delta) {
-        cart[idx].qty = Math.max(1, cart[idx].qty + delta);
-        openCartModal(); updateCartUI();
-    }
-
-    function removeFromCart(idx) {
-        cart.splice(idx, 1);
-        openCartModal(); updateCartUI();
-    }
+    function updateCartQty(idx, delta) { cart[idx].qty = Math.max(1, cart[idx].qty + delta); openCartModal(); updateCartUI(); }
+    function removeFromCart(idx) { cart.splice(idx, 1); openCartModal(); updateCartUI(); }
 
     async function confirmCartOrder() {
-        if (cart.length === 0) return;
         if (!confirm("注文を確定しますか？")) return;
         const btn = document.getElementById('submit-cart-btn');
         btn.disabled = true; btn.innerText = "送信中...";
@@ -245,7 +213,24 @@ function handleItemClick(name) {
         btn.innerText = "注文を確定";
     }
 
-    // --- 履歴・配膳 ---
+    function openHistory() {
+        document.getElementById('history-table-name').innerText = `${tableNo}番`;
+        document.getElementById('history-list').innerHTML = orders.length ? orders.map((o, idx) => `
+            <div onclick="toggleServed(${idx})" class="bg-white border p-4 rounded-2xl flex justify-between items-center ${o.served ? 'served' : ''}">
+                <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 rounded-full border flex items-center justify-center text-[10px] ${o.served ? 'bg-slate-400 text-white border-slate-400' : 'border-slate-300 text-slate-300'}">${o.served ? '済' : ''}</div>
+                    <div><div class="font-bold text-sm item-name">${o.name}</div><div class="text-orange-600 text-[11px] font-black">¥${o.price.toLocaleString()}</div></div>
+                </div>
+                <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border" onclick="event.stopPropagation()">
+                    <button onclick="changeHistoryQty(${idx}, -1)" class="w-8 h-8 bg-white rounded-lg shadow-sm font-black">-</button>
+                    <span class="font-mono font-black text-lg w-6 text-center">${o.qty}</span>
+                    <button onclick="changeHistoryQty(${idx}, 1)" class="w-8 h-8 bg-white rounded-lg shadow-sm font-black">+</button>
+                </div>
+            </div>`).join('') : '<div class="text-center py-20 text-slate-300 text-sm">注文履歴はありません</div>';
+        document.getElementById('history-modal').classList.add('active');
+        updateTotal();
+    }
+
     function toggleServed(idx) { orders[idx].served = !orders[idx].served; save(); openHistory(); }
     function changeHistoryQty(idx, delta) {
         orders[idx].qty += delta;
@@ -259,56 +244,21 @@ function handleItemClick(name) {
         if(document.getElementById('history-total')) document.getElementById('history-total').innerText = total.toLocaleString();
     }
 
-    function openHistory() {
-        document.getElementById('history-table-name').innerText = `${tableNo}番`;
-        document.getElementById('history-list').innerHTML = orders.length ? orders.map((o, idx) => `
-            <div onclick="toggleServed(${idx})" class="bg-white border p-4 rounded-2xl flex justify-between items-center ${o.served ? 'served' : ''}">
-                <div class="flex items-center space-x-3">
-                    <div class="w-6 h-6 rounded-full border flex items-center justify-center text-[10px] ${o.served ? 'bg-slate-400 border-slate-400 text-white' : 'border-slate-300 text-slate-300'}">${o.served ? '済' : ''}</div>
-                    <div><div class="font-bold text-sm item-name">${o.name}</div><div class="text-orange-600 text-[11px] font-black">¥${o.price.toLocaleString()}</div></div>
-                </div>
-                <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border" onclick="event.stopPropagation()">
-                    <button onclick="changeHistoryQty(${idx}, -1)" class="w-8 h-8 bg-white rounded-lg shadow-sm font-black">-</button>
-                    <span class="font-mono font-black text-lg w-6 text-center">${o.qty}</span>
-                    <button onclick="changeHistoryQty(${idx}, 1)" class="w-8 h-8 bg-white rounded-lg shadow-sm font-black">+</button>
-                </div>
-            </div>`).join('') : '<div class="text-center py-20 text-slate-300 text-sm">注文履歴はありません</div>';
-        document.getElementById('history-modal').classList.add('active');
-        updateTotal();
-    }
-
-    // --- 日報書き出し（朝6時区切り） ---
     function exportCSV() {
         const now = new Date();
         const businessDay = new Date(now);
         if (now.getHours() < 6) businessDay.setDate(businessDay.getDate() - 1);
         const targetDateStr = businessDay.toLocaleDateString('ja-JP');
-
-        if (!confirm(`${targetDateStr} 分の売上日報を作成しますか？`)) return;
-
-        const startTime = new Date(businessDay);
-        startTime.setHours(6, 0, 0, 0);
-        const endTime = new Date(startTime);
-        endTime.setDate(endTime.getDate() + 1);
-        endTime.setSeconds(endTime.getSeconds() - 1);
-
-        const filteredHistory = salesHistory.filter(s => {
-            const orderDate = new Date(s.date);
-            return orderDate >= startTime && orderDate <= endTime;
-        });
-
+        const startTime = new Date(businessDay); startTime.setHours(6, 0, 0, 0);
+        const endTime = new Date(startTime); endTime.setDate(endTime.getDate() + 1); endTime.setSeconds(endTime.getSeconds() - 1);
+        const filteredHistory = salesHistory.filter(s => { const orderDate = new Date(s.date); return orderDate >= startTime && orderDate <= endTime; });
         if (filteredHistory.length === 0) { alert(`${targetDateStr} の売上データがありません。`); return; }
-
         let csv = "\uFEFF日時,席,商品名,単価(税込),数量\n";
         let totalSales = 0;
-        filteredHistory.forEach(s => {
-            csv += `${s.date},${s.table},${s.name},${s.price},${s.qty}\n`;
-            totalSales += (s.price * s.qty);
-        });
+        filteredHistory.forEach(s => { csv += `${s.date},${s.table},${s.name},${s.price},${s.qty}\n`; totalSales += (s.price * s.qty); });
         csv += `\n合計金額,,${totalSales}円\n`;
-
         const subject = `【日報】${targetDateStr}分_やきとり食堂ひとり`;
-        const body = `お疲れ様です。${targetDateStr}分の売上日報です。\n売上合計: ¥${totalSales.toLocaleString()}\n\n${csv}`;
+        const body = `売上合計: ¥${totalSales.toLocaleString()}\n\n${csv}`;
         window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
 
