@@ -134,7 +134,6 @@
         if (item.options) {
             optArea.classList.remove('hidden');
             let opts = (item.name === "焼酎") ? ["ロック", "水割", "お湯割"] :
-                       (item.name === "日本酒") ? ["冷酒", "常温", "熱燗"] : 
                        (item.name === "梅酒") ? ["ロック", "ソーダ割"] : ["塩", "タレ", "おまかせ"];
             optBtnWrap.innerHTML = opts.map(o => `<button onclick="selectOption('${o}')" class="opt-btn bg-white py-3 rounded-xl border border-slate-100 font-bold text-sm">${o}</button>`).join('');
             selectOption(opts[0]);
